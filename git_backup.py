@@ -56,35 +56,44 @@ for namespace in namespaces:
         if (non_bare_repository_path.exists()):            
             shutil.rmtree(path=non_bare_repository_path, onerror = redo_with_write)        
         bare_repository_path.mkdir(parents=True, exist_ok=True)
-        non_bare_repository_path.mkdir(parents=True, exist_ok=True)        
-        # Clone mirror the repository
-        print("\t\tCloning bare repository...")
-        bare_repo = Repo.clone_from(url=repository['url'], to_path=bare_repository_path, mirror=True)
-         # Clone the repository
-        print("\t\tCloning non bare repository...")
-        non_bare_repo = Repo.clone_from(url=repository['url'], to_path=non_bare_repository_path, mirror=False)
-        # Backup the repository
-        print("\t\tArchiving repository sources...")
-        try:
-            save_path = path.joinpath(repository['name'] + "_src_" + datetime.date.today().strftime("%Y%m%d") + ".zip")
-            with open(save_path, 'wb') as fp:
-                bare_repo.archive(fp, format='zip')    
-                fp.close()   
+        non_bare_repository_path.mkdir(parents=True, exist_ok=True)   
+        bare_repo = None
+        non_bare_repo = None
+        try:     
+            # Clone mirror the repository
+            print("\t\tCloning bare repository...")
+            bare_repo = Repo.clone_from(url=repository['url'], to_path=bare_repository_path, mirror=True)
+            # Backup the repository
+            print("\t\tArchiving repository sources...")
+            try:
+                save_path = path.joinpath(repository['name'] + "_src_" + datetime.date.today().strftime("%Y%m%d") + ".zip")
+                with open(save_path, 'wb') as fp:
+                    bare_repo.archive(fp, format='zip')    
+                    fp.close()   
+            except:
+                print("Error archiving repository \"" + repository['name'] + "\" sources")
+            finally:
+                # Close repository
+                bare_repo.close()          
         except:
-            print("Error archiving repository \"" + repository['name'] + "\" sources")  
-        finally:
-            # Close repository
-            bare_repo.close()      
-        # Backup the repository
-        print("\t\tArchiving repository...")
+            print("Error cloning repository \"" + repository['name'] + "\" sources")        
         try:
-            save_path = path.joinpath(repository['name'] + "_repo_" + datetime.date.today().strftime("%Y%m%d"))
-            shutil.make_archive(base_name=save_path, format="zip", root_dir=non_bare_repository_path)             
+            # Clone the repository
+            print("\t\tCloning non bare repository...")
+            non_bare_repo = Repo.clone_from(url=repository['url'], to_path=non_bare_repository_path, mirror=False)
+            # Backup the repository
+            print("\t\tArchiving repository...")
+            try:
+                save_path = path.joinpath(repository['name'] + "_repo_" + datetime.date.today().strftime("%Y%m%d"))
+                shutil.make_archive(base_name=save_path, format="zip", root_dir=non_bare_repository_path)             
+            except:
+                print("Error archiving repository \"" + repository['name'])
+            finally:
+                # Close repository
+                non_bare_repo.close()
         except:
-            print("Error archiving repository \"" + repository['name'])
-        finally:
-            # Close repository
-            non_bare_repo.close()
+            print("Error cloning bare repository \"" + repository['name'] + "")  
+            
         # Delete the source directory folder
         print("\t\tDeleting bare repository folder...")        
         if (bare_repository_path.exists()):            

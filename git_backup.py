@@ -1,32 +1,46 @@
 from git import Repo
 from git import RemoteProgress
+from models.bitbucket import BitbucketModel
 from models.gitlab import GitlabModel
 from pathlib import Path
 import shutil
 import stat
 import datetime
 import sys
+import argparse
 
 def redo_with_write(redo_func, path, err):   
     Path(path).chmod(stat.S_IWUSR)
     redo_func(path)
 
-# Read destination folder and API token
-if (len(sys.argv) < 2 or len(sys.argv) > 3):
-    # Wrong number of arguments
-    print("Usage: git_backup.py <api_token> <destination_path>")
-    exit(-1)
+# Declare argument parser
+parser = argparse.ArgumentParser(description='Backup all git repositories.')
+parser.add_argument('--service', dest='service', help='the git service provider', required=True, choices=['bitbucket', 'gitlab'])
+parser.add_argument('service', nargs=1)
+parser.add_argument('--username', dest='username', help='the git username')
+parser.add_argument('username', nargs='?')
+parser.add_argument('--password', dest='password', help='the git password')
+parser.add_argument('password', nargs='?')
+parser.add_argument('--apy_key', dest='apikey', help='the git API key')
+parser.add_argument('apykey', nargs='?')
+parser.add_argument('--destination', dest='destination', help='the repositories clone destination', default='.', required=False)
+
+args = vars(parser.parse_args(sys.argv))
 
 # Else get the API token
-token = sys.argv[1]
-
-if (len(sys.argv) == 3):
-    destination = sys.argv[2]
-else:
-    destination = "."
+model = args['service']
+token = args['apykey']
+username = args['username']
+password = args['password']
+destination = args['destination']
 
 # Init Gitlab model
-model = GitlabModel(token)
+if model == 'gitlab':
+    model = GitlabModel(token=token, username=username, password=password)
+elif model == 'bitbucket':
+    model = BitbucketModel(token=token, username=username, password=password)
+else:
+    model = None
 
 # Retrieve the list of namespaces
 namespaces = model.getNamespaces()
@@ -66,10 +80,11 @@ for namespace in namespaces:
             # Backup the repository
             print("\t\tArchiving repository sources...")
             try:
-                save_path = path.joinpath(repository['name'] + "_src_" + datetime.date.today().strftime("%Y%m%d") + ".zip")
-                with open(save_path, 'wb') as fp:
-                    bare_repo.archive(fp, format='zip')    
-                    fp.close()   
+                save_path = path.joinpath(repository['name'] + "_src_" + datetime.date.today().strftime("%Y%m%d"))
+                #with open(save_path, 'wb') as fp:
+                #    bare_repo.archive(fp, format='zip')    
+                #    fp.close()
+                shutil.make_archive(base_name=save_path, format="zip", root_dir=bare_repository_path)    
             except:
                 print("Error archiving repository \"" + repository['name'] + "\" sources")
             finally:

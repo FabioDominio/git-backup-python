@@ -12,13 +12,28 @@ After cloning  or downloading the repository, install the dependencies:
 pip install -r requirements.txt
 ```
 
+To use a virtual environment instead:
+```bash
+python -m venv <venv>
+<venv>\Scripts\activate.bat    
+```
+in Windows.
+```bash
+python -m venv <venv>
+<venv>/Scripts/activate    
+```
+in Linux.
+
 ## Usage
 
 ```bash
-py git_backup.py TOKEN [DESTINATION]
+git_backup.py [-h] --service {bitbucket,gitlab} [--username USERNAME]
+                     [--password PASSWORD] [--apy_key APIKEY]
+                     [--destination DESTINATION]
+                     service [username] [password] [apykey]
 ```
 
-with TOKEN the user's Gitlab API private token, and DESTINATION the *optional* destination folder path for the saved repositories. If not specified, the destination defaults to the current work directory.
+with TOKEN the user's git provider API private token, and DESTINATION the *optional* destination folder path for the saved repositories. If not specified, the destination defaults to the current work directory.
 
 ## How it works
 
@@ -39,3 +54,10 @@ DESTINATION
 ​																	|--->REPOSITORY_1_NAME_src_YYYYMMDD.zip  
 
 ​																	|--->REPOSITORY_1_NAME_repo_YYYYMMDD.zip
+
+## Development
+To upgrade the requirements:
+```bash
+pip install pip-upgrader
+pip-upgrade requirements.txt
+```

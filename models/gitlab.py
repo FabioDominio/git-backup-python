@@ -11,7 +11,7 @@ class GitlabModel(BaseModel):
     def __init__(self):        
         pass
     
-    def __init__(self, token):
+    def __init__(self, username=None, password=None, token=None):
         self.token = token
         self.headers = {"Accept": "application/json", "PRIVATE-TOKEN" : token}
         super().__init__()
